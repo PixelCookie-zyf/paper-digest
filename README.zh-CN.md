@@ -1,0 +1,170 @@
+<div align="center">
+
+<pre>
+█▀█ ▄▀█ █▀█ █▀▀ █▀█   █▀▄ █ █▀▀ █▀▀ █▀ ▀█▀
+█▀▀ █▀█ █▀▀ ██▄ █▀▄   █▄▀ █ █▄█ ██▄ ▄█  █
+</pre>
+
+<br/>
+<br/>
+
+**让 AI 替你读论文 —— 从经典到前沿，一篇一篇来。**
+
+<br/>
+
+中文 | [English](README.md)
+
+<br/>
+
+</div>
+
+---
+
+## 为什么做这个
+
+读论文是个体力活。尤其是 LLM Agent 这个方向，从 2022 年 ReAct 开始爆发，几年下来论文已经成百上千。你想系统地读一遍，但是：
+
+- 不知道从哪篇开始
+- 不知道哪些值得读、哪些是水文
+- 读完记不住重点
+- 中英文来回切换很累
+
+这个工具帮你解决这些问题。
+
+## 工作流程
+
+```
+python main.py
+```
+
+就这一行。工具会自动：
+
+1. **搜索** — 从 ReAct 时代（2022-10）开始按时间顺序搜索 arXiv
+2. **去重** — 跳过你已经读过的论文
+3. **AI 筛选** — MiniMax 判断每篇论文：值不值得你花时间？
+4. **深度阅读** — 下载完整 PDF，提取全文
+5. **总结** — 逐篇送给 MiniMax 生成详细的双语分析
+6. **生成** — 每篇论文一个 MDX 文件，结构清晰，可直接发博客
+
+明天再跑一次，自动接上次的进度，永远不重复。
+
+## 核心特点
+
+- **按时间线阅读** — 从 ReAct（2022-10）开始，按发表时间往后推进。先打基础，再看前沿，建立完整的知识脉络。
+- **AI 帮你筛** — 搜到一批候选论文后，先让 MiniMax 快速过一遍摘要，判断值不值得精读。水文直接跳过，省时间。
+- **一篇一篇精读** — 不是把一堆论文塞给 AI 批量总结。每篇论文单独下载完整 PDF，提取全文，独立送给 MiniMax 认真写总结。
+- **中英双语** — 每个部分都同时输出中文和英文。不是机翻，AI 分别用两种语言原生撰写。
+- **跑完接着跑** — 自动记录已处理的论文。今天跑 3 篇，明天跑 3 篇，一周就能系统过完一个方向的经典论文。不会重复。
+- **看得见进度** — 终端里有转圈动画和每步耗时，清楚知道工具在干嘛。
+
+## 快速开始
+
+```bash
+# 安装
+uv venv .venv && source .venv/bin/activate
+uv pip install -r requirements.txt
+
+# 配置
+cp .env.example .env
+# 编辑 .env，填入你的 MINIMAX_API_KEY
+
+# 运行
+python main.py
+```
+
+## 用法
+
+```bash
+python main.py                          # 默认：从 2022-10 开始读 "LLM Agent"
+python main.py "multimodal reasoning"   # 换个方向
+python main.py -n 5                     # 这次多读 5 篇
+python main.py --pool-size 50           # 搜索范围扩大
+python main.py --start-date 2024-01-01  # 从 2024 年开始
+python main.py --no-screen              # 跳过筛选，全都读
+python main.py --history                # 看看已经读过哪些
+```
+
+## 配置 (.env)
+
+```env
+MINIMAX_API_KEY=your_key_here           # 必填
+MINIMAX_BASE_URL=https://api.minimaxi.com/v1
+MINIMAX_MODEL=MiniMax-M2.7
+OUTPUT_DIR=output
+```
+
+## 生成的 MDX 长什么样
+
+每篇论文一个 `.mdx` 文件，包含：
+
+| 内容         | 说明                           |
+|-------------|--------------------------------|
+| 论文标题     | 中英双语                        |
+| 一句话概述   | 做了什么、为什么重要              |
+| 研究问题     | 要解决什么问题                   |
+| 摘要总结     | 动机、方法、结果                  |
+| 核心方法     | 具体的技术方案                   |
+| 模型/框架    | 架构和组件                       |
+| 数据集       | 用了什么数据、规模多大            |
+| 实验设置     | 基线、指标、关键参数              |
+| 主要结果     | 关键数据和发现                   |
+| 创新点       | 有什么新东西                     |
+| 局限性       | 不足之处                        |
+| 适用场景     | 适合用在哪里                     |
+| 重点关注     | 作为读者应该关注什么              |
+| 关键词       | 中英双语                        |
+
+带 frontmatter，可以直接用在博客里。
+
+## 项目结构
+
+```
+├── main.py                  # 命令行入口，带 rich 进度 UI
+├── config/                  # 从 .env 读取配置
+├── paper_search/            # arXiv 搜索（可扩展其他源）
+├── paper_fetch/             # PDF 下载 + 全文提取
+├── llm_summary/             # MiniMax 筛选 + 深度总结
+├── mdx_writer/              # 逐篇生成双语 MDX
+├── history.py               # 跨次运行的去重追踪
+├── processed_papers.json    # 自动生成的阅读记录
+└── output/                  # 你的论文摘要在这里
+```
+
+## 终端效果
+
+```
+╭──────── Paper Digest ────────╮
+│ Query: LLM Agent             │
+│ From:  2022-10-01            │
+│ Pool:  20 candidates         │
+│ Goal:  3 papers              │
+╰──────────────────────────────╯
+
+  Found 20 candidates from arXiv
+  All 20 are new
+
+──────────── Paper 1/20 ────────────
+  ReAct: Synergizing Reasoning and Acting in Language Models
+  2022-10-06 · Shunyu Yao, Jeffrey Zhao, Dian Yu...
+
+  PASS (3.2s) 经典 ReAct 框架
+  PDF extracted (8.4s) 52,381 chars
+  MiniMax 正在精读并撰写总结...
+  Summary done (45.2s)
+  Saved: output/2026-03-19-react-synergizing-reasoning-and-acting.mdx
+
+┌──── Done — 处理了 3 篇论文 ────┐
+│ #  File                         │
+│ 1  output/2026-03-19-react-…    │
+│ 2  output/2026-03-19-toolfo-…   │
+│ 3  output/2026-03-19-llm-pl-…   │
+└─────────────────────────────────┘
+```
+
+---
+
+<div align="center">
+
+*Built with arXiv API, MiniMax AI, and a lot of coffee.*
+
+</div>
