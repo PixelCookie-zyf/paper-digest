@@ -31,3 +31,5 @@ Thumbs.db
 *.tmp
 *.pdf
 .claude/
+!.claude/commands/
+!.claude/commands/**

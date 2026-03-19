@@ -74,6 +74,59 @@ python main.py --no-screen              # 跳过筛选，全都读
 python main.py --history                # 看看已经读过哪些
 ```
 
+## 作为斜杠命令使用（适配 LLM 编程工具）
+
+Paper Digest 可以作为**斜杠命令**在 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 或任何支持 `.claude/commands/` 的 LLM 工具中运行。
+
+### 安装
+
+命令文件已经在项目的 `.claude/commands/paper-digest.md` 中。用 LLM 工具打开这个项目即可使用。
+
+如果想全局可用（任何项目都能调用），复制一下：
+
+```bash
+mkdir -p ~/.claude/commands
+cp .claude/commands/paper-digest.md ~/.claude/commands/
+```
+
+### 命令用法
+
+```
+/paper-digest                                   # 默认："LLM Agent"，Claude 自己总结
+/paper-digest "multimodal reasoning"            # 换个方向
+/paper-digest --max 5                           # 处理 5 篇
+/paper-digest --summarizer minimax              # 用 MiniMax API 而不是 Claude
+/paper-digest --mode script                     # 用 Python 脚本跑
+/paper-digest --start-date 2024-01-01           # 从 2024 年开始
+/paper-digest --no-screen                       # 跳过质量筛选
+```
+
+### 运行模式
+
+| 模式 | 工作方式 | 需要什么 |
+|------|---------|---------|
+| `native`（默认） | LLM 自己干所有事 — 搜索、筛选、读 PDF、写总结、生成 MDX | 什么都不需要 |
+| `script` | 调用 Python 脚本（`main.py`） | Python 依赖 + `MINIMAX_API_KEY` |
+
+### 总结引擎
+
+| 选项 | 工作方式 | 需要什么 |
+|------|---------|---------|
+| `claude`（默认） | LLM 自己写总结 | 什么都不需要 |
+| `minimax` | 调用 MiniMax API 生成总结 | `.env` 中配置 `MINIMAX_API_KEY` |
+
+### 给其他 LLM / Agent 框架用
+
+`.claude/commands/paper-digest.md` 是一个自包含的 prompt 文件，包含了完整的工作流、arXiv 查询构建方式、总结 JSON schema 和 MDX 模板。你可以：
+
+1. 作为 system prompt 喂给任何 LLM
+2. 改造成其他 Agent 框架的流程（LangChain、CrewAI 等）
+3. 作为参考规范来构建你自己的论文阅读工具
+
+文件里包含了 LLM 需要知道的一切 — 不需要额外文档。
+
+---
+
 ## 配置 (.env)
 
 ```env

@@ -74,6 +74,59 @@ python main.py --no-screen              # Skip screening, read everything
 python main.py --history                # See what you've already read
 ```
 
+## Use as a Slash Command (for LLM coding tools)
+
+Paper Digest can run as a **slash command** inside [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or any LLM tool that supports `.claude/commands/`.
+
+### Installation
+
+The command file is already included at `.claude/commands/paper-digest.md`. Just open this project in your LLM tool.
+
+For global access (any project), copy it:
+
+```bash
+mkdir -p ~/.claude/commands
+cp .claude/commands/paper-digest.md ~/.claude/commands/
+```
+
+### Slash Command Usage
+
+```
+/paper-digest                                   # Default: "LLM Agent", Claude summarizes
+/paper-digest "multimodal reasoning"            # Custom topic
+/paper-digest --max 5                           # Process 5 papers
+/paper-digest --summarizer minimax              # Use MiniMax API instead of Claude
+/paper-digest --mode script                     # Use the Python pipeline
+/paper-digest --start-date 2024-01-01           # Start from a later date
+/paper-digest --no-screen                       # Skip quality screening
+```
+
+### Modes
+
+| Mode | How it works | Requires |
+|------|-------------|----------|
+| `native` (default) | The LLM does everything — search, screen, read PDFs, summarize, write MDX | Nothing extra |
+| `script` | Runs the Python pipeline (`main.py`) | Python deps + `MINIMAX_API_KEY` |
+
+### Summarizer
+
+| Option | How it works | Requires |
+|--------|-------------|----------|
+| `claude` (default) | The LLM generates summaries itself | Nothing extra |
+| `minimax` | Calls MiniMax API for summaries | `MINIMAX_API_KEY` in `.env` |
+
+### For other LLMs / Agent frameworks
+
+The command file at `.claude/commands/paper-digest.md` is a self-contained prompt with the full workflow, arXiv query construction, summary schema, and MDX template. You can:
+
+1. Feed it as a system prompt to any LLM
+2. Adapt it for other agent frameworks (LangChain, CrewAI, etc.)
+3. Use it as a reference spec for building your own paper digest tool
+
+The file contains everything the LLM needs to know — no external documentation required.
+
+---
+
 ## Configuration (.env)
 
 ```env
