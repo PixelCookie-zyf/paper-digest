@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 def _slugify(text: str) -> str:
-    """Convert text to URL-friendly slug."""
     text = text.lower().strip()
     text = re.sub(r"[^\w\s-]", "", text)
     text = re.sub(r"[\s_]+", "-", text)
@@ -16,16 +15,29 @@ def _slugify(text: str) -> str:
     return text.strip("-")[:80]
 
 
-def _render_paper(summary: dict, paper_url: str) -> str:
-    """Render a single paper's full summary as Markdown."""
+def _render_paper_section(idx: int, paper: PaperMeta, summary: dict) -> str:
+    """Render one paper's summary as a section within a combined MDX."""
     s = summary
+    title_en = s.get("title_en", paper.title)
+    title_zh = s.get("title_zh", "")
+    authors_str = ", ".join(paper.authors[:5])
+    if len(paper.authors) > 5:
+        authors_str += " et al."
 
     return f"""
+---
+
+# {idx}. {title_en}
+
+**{title_zh}**
+
+**Authors:** {authors_str}  |  **Published:** {paper.published}  |  **Source:** {paper.source}
+
 > {s.get('one_line_summary_en', '')}
 >
 > {s.get('one_line_summary_zh', '')}
 
-**Link / 论文链接:** [{paper_url}]({paper_url})
+**Link / 论文链接:** [{paper.url}]({paper.url})
 
 ## Research Problem / 研究问题
 
@@ -101,60 +113,57 @@ def _render_paper(summary: dict, paper_url: str) -> str:
 """
 
 
-def generate_single_mdx(paper: PaperMeta, summary: dict, output_dir: str) -> str:
-    """Generate one MDX file for one paper.
+def generate_digest_mdx(query: str, papers_with_summaries: list[tuple[PaperMeta, dict]], output_dir: str) -> str:
+    """Generate ONE combined MDX file containing all papers from this run.
 
     Args:
-        paper: Paper metadata
-        summary: Structured summary dict from MiniMax
+        query: The search topic
+        papers_with_summaries: List of (PaperMeta, summary_dict) tuples
         output_dir: Directory to save the MDX file
 
     Returns:
         Path to the generated MDX file
     """
     today = date.today().isoformat()
-    title_slug = _slugify(paper.title)
-    filename = f"{today}-{title_slug}.mdx"
+    slug = _slugify(query)
+    filename = f"{today}-{slug}-paper-digest.mdx"
 
     os.makedirs(output_dir, exist_ok=True)
     filepath = os.path.join(output_dir, filename)
 
-    # Tags from keywords
-    keywords = summary.get("keywords_en", [])
-    tags_str = "\n".join(f"  - {kw}" for kw in keywords) if keywords else "  - LLM Agent"
+    # Collect all keywords for tags
+    all_keywords = set()
+    for _, s in papers_with_summaries:
+        all_keywords.update(s.get("keywords_en", []))
+    tags_str = "\n".join(f"  - {kw}" for kw in sorted(all_keywords)) if all_keywords else f"  - {query}"
 
-    title_en = summary.get("title_en", paper.title)
-    title_zh = summary.get("title_zh", "")
-    one_line = summary.get("one_line_summary_en", "")
-    authors_str = ", ".join(paper.authors[:5])
-    if len(paper.authors) > 5:
-        authors_str += " et al."
+    # Paper titles for summary
+    titles = [s.get("title_en", p.title) for p, s in papers_with_summaries]
+    titles_list = "; ".join(titles)
 
     # Frontmatter
     frontmatter = f"""---
-title: "{title_en}"
-date: "{paper.published}"
+title: "Paper Digest: {query}"
+date: "{today}"
 tags:
 {tags_str}
 draft: false
-authors: "{authors_str}"
-summary: "{one_line}"
-paper_url: "{paper.url}"
+summary: "{len(papers_with_summaries)} papers on {query}: {titles_list}"
 ---"""
 
     # Header
     header = f"""
-# {title_en}
+# Paper Digest: {query}
 
-**{title_zh}**
-
-**Authors:** {authors_str}  |  **Published:** {paper.published}  |  **Source:** {paper.source}
+> {len(papers_with_summaries)} papers reviewed on **{today}**
 """
 
-    # Body
-    body = _render_paper(summary, paper.url)
+    # Paper sections
+    sections = []
+    for idx, (paper, summary) in enumerate(papers_with_summaries, 1):
+        sections.append(_render_paper_section(idx, paper, summary))
 
-    content = frontmatter + "\n" + header + body
+    content = frontmatter + "\n" + header + "\n".join(sections)
 
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(content)

@@ -173,31 +173,33 @@ source .env && curl -s ${LLM_BASE_URL}/chat/completions \
 ```
 The prompt should contain the paper info + abstract + content + the JSON schema above. Works with any OpenAI-compatible endpoint (MiniMax, DeepSeek, Qwen, OpenAI, Ollama, etc.).
 
-### Step 6: Generate MDX
+### Step 6: Generate ONE Combined MDX
 
-Write one `.mdx` file per paper to the `output/` directory using the Write tool.
+**IMPORTANT:** Do NOT write one MDX per paper. Process ALL papers first (Steps 3-5 in a loop), collect all summaries, then write ONE combined MDX containing all papers.
 
-**Filename:** `{today}-{slugified-title}.mdx` (max 80 chars for slug)
+**Filename:** `{today}-{slugified-query}-paper-digest.mdx`
 
 **Template:**
 
 ```
 ---
-title: "{title_en}"
-date: "{published}"
+title: "Paper Digest: {query}"
+date: "{today}"
 tags:
-  - {keyword1}
-  - {keyword2}
-  ...
+  - {all keywords from all papers}
 draft: false
-authors: "{author1, author2, ...}"
-summary: "{one_line_summary_en}"
-paper_url: "{url}"
+summary: "{N} papers on {query}: {paper1 title}; {paper2 title}; ..."
 ---
 
-# {title_en}
+# Paper Digest: {query}
 
-**{title_zh}**
+> {N} papers reviewed on **{today}**
+
+---
+
+# 1. {paper1_title_en}
+
+**{paper1_title_zh}**
 
 **Authors:** {authors}  |  **Published:** {published}  |  **Source:** arxiv
 
@@ -208,81 +210,24 @@ paper_url: "{url}"
 **Link / 论文链接:** [{url}]({url})
 
 ## Research Problem / 研究问题
+[... all sections for paper 1 ...]
 
-**EN:** {research_problem_en}
+---
 
-**ZH:** {research_problem_zh}
+# 2. {paper2_title_en}
+[... all sections for paper 2 ...]
 
-## Abstract Summary / 摘要总结
+---
 
-**EN:** {abstract_summary_en}
-
-**ZH:** {abstract_summary_zh}
-
-## Core Method / 核心方法
-
-**EN:** {core_method_en}
-
-**ZH:** {core_method_zh}
-
-## Model & Framework / 模型与框架
-
-**EN:** {model_framework_en}
-
-**ZH:** {model_framework_zh}
-
-## Datasets / 数据集
-
-**EN:** {datasets_en}
-
-**ZH:** {datasets_zh}
-
-## Experimental Setup / 实验设置
-
-**EN:** {experimental_setup_en}
-
-**ZH:** {experimental_setup_zh}
-
-## Main Results / 主要结果
-
-**EN:** {main_results_en}
-
-**ZH:** {main_results_zh}
-
-## Innovations / 创新点
-
-**EN:** {innovations_en}
-
-**ZH:** {innovations_zh}
-
-## Limitations / 局限性
-
-**EN:** {limitations_en}
-
-**ZH:** {limitations_zh}
-
-## Use Cases / 适用场景
-
-**EN:** {use_cases_en}
-
-**ZH:** {use_cases_zh}
-
-## Key Takeaways / 重点关注
-
-**EN:** {key_takeaways_en}
-
-**ZH:** {key_takeaways_zh}
-
-## Keywords / 关键词
-
-**EN:** {keywords_en joined by ", "}
-
-**ZH:** {keywords_zh joined by ", "}
+# 3. {paper3_title_en}
+[... all sections for paper 3 ...]
 ```
+
+Each paper section contains all the bilingual summary fields (Research Problem, Abstract Summary, Core Method, Model & Framework, Datasets, Experimental Setup, Main Results, Innovations, Limitations, Use Cases, Key Takeaways, Keywords).
 
 ### Step 7: Update History
 
-Read `processed_papers.json`, add the new entry, write it back:
+Read `processed_papers.json`, add entries for ALL processed papers, write it back:
 
 ```json
 {
@@ -298,7 +243,8 @@ Read `processed_papers.json`, add the new entry, write it back:
 
 ### Step 8: Report
 
-After processing all papers, show a summary:
+After ALL papers are processed and the MDX is written, show a summary:
 - How many candidates found
 - How many skipped (already processed / failed screening)
-- List of generated MDX files with paper titles
+- List of all papers included in the digest with titles and dates
+- Path to the generated MDX file

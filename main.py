@@ -19,7 +19,7 @@ from config import settings
 from paper_search import ArxivProvider
 from paper_fetch import fetch_paper_content
 from llm_summary import summarize_paper, screen_paper, plan_search
-from mdx_writer import generate_single_mdx
+from mdx_writer import generate_digest_mdx
 from history import mark_processed, get_processed_ids, show_history
 
 console = Console()
@@ -135,12 +135,11 @@ def main():
         console.print("\n[yellow]All candidates already processed! Try --pool-size or --start-date.[/]\n")
         return
 
-    # ── Step 3: Process papers one by one ──
-    processed_count = 0
-    generated_files = []
+    # ── Step 3: Process papers one by one, collect summaries ──
+    papers_with_summaries = []
 
     for i, paper in enumerate(fresh):
-        if processed_count >= max_papers:
+        if len(papers_with_summaries) >= max_papers:
             break
 
         console.print()
@@ -182,27 +181,27 @@ def main():
             elapsed = time.time() - t0
 
         console.print(f"  [green]Summary done[/] ({elapsed:.1f}s)")
+        papers_with_summaries.append((paper, summary))
 
-        # ── Generate MDX ──
-        mdx_path = generate_single_mdx(paper, summary, output_dir)
-        mark_processed(paper.url, paper.title, query, mdx_path)
-        generated_files.append(mdx_path)
-        processed_count += 1
+    # ── Step 4: Generate one combined MDX ──
+    if papers_with_summaries:
+        mdx_path = generate_digest_mdx(query, papers_with_summaries, output_dir)
 
-        console.print(f"  [bold green]Saved:[/] {mdx_path}")
+        # Record all papers in history
+        for paper, _ in papers_with_summaries:
+            mark_processed(paper.url, paper.title, query, mdx_path)
 
-    # ── Summary ──
-    console.print()
-    if generated_files:
-        table = Table(title=f"Done — {processed_count} paper(s) processed", border_style="green")
+        console.print()
+        table = Table(title=f"Done — {len(papers_with_summaries)} paper(s) in one digest", border_style="green")
         table.add_column("#", style="dim", width=3)
-        table.add_column("File", style="cyan")
-        for idx, f in enumerate(generated_files, 1):
-            table.add_row(str(idx), f)
+        table.add_column("Paper", style="white")
+        table.add_column("Published", style="dim")
+        for idx, (p, _) in enumerate(papers_with_summaries, 1):
+            table.add_row(str(idx), p.title, p.published)
         console.print(table)
+        console.print(f"\n  [bold green]Saved:[/] {mdx_path}\n")
     else:
-        console.print("[yellow]No papers processed this run.[/]")
-    console.print()
+        console.print("\n[yellow]No papers processed this run.[/]\n")
 
 
 if __name__ == "__main__":

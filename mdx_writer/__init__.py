@@ -1,1 +1,1 @@
-from .writer import generate_single_mdx
+from .writer import generate_digest_mdx
