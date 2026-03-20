@@ -1,4 +1,5 @@
 ---
+name: paper-digest
 description: "Search arXiv papers, AI-screen, summarize (bilingual), generate MDX"
 argument-hint: '[query] [--mode native|script] [--summarizer claude|api] [--max N] [--start-date YYYY-MM-DD] [--no-screen]'
 allowed-tools: Bash, Read, Write, Edit, WebFetch, Glob, Grep

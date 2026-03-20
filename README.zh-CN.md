@@ -10,7 +10,7 @@
 
 ---
 
-> **支持斜杠命令** — 在 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 或任何 LLM 工具中安装为 `/paper-digest`。零依赖，开箱即用。[查看安装方法 →](#安装为斜杠命令)
+> **Agent Skill** — 支持 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)、[Codex](https://github.com/openai/codex)、[OpenCode](https://opencode.ai)、[Cursor](https://cursor.sh)、[Copilot](https://github.com/features/copilot) 等所有 AI 编程助手。零依赖，开箱即用。[查看安装方法 →](#安装为-agent-skill)
 
 ---
 
@@ -48,11 +48,13 @@
 
 ---
 
-## 安装为斜杠命令
+## 安装为 Agent Skill
 
-**这是推荐的使用方式。** 不需要 Python，不需要 pip，不需要 API key — LLM 自己搞定一切。
+**不需要 Python，不需要 pip，不需要 API key** — AI 助手自己搞定一切。
 
-### 第一步：安装
+技能文件 (`.claude/commands/paper-digest.md`) 是一个**自包含的 prompt** — 任何能读 markdown 的 AI 助手都能用。
+
+### Claude Code
 
 ```bash
 # 方式 A：克隆项目，在项目内使用
@@ -65,7 +67,7 @@ curl -o ~/.claude/commands/paper-digest.md \
   https://raw.githubusercontent.com/PixelCookie-zyf/paper-digest/main/.claude/commands/paper-digest.md
 ```
 
-### 第二步：使用
+然后使用：
 
 ```
 /paper-digest                                   # 默认："LLM Agent"
@@ -75,9 +77,47 @@ curl -o ~/.claude/commands/paper-digest.md \
 /paper-digest --no-screen                       # 跳过筛选，全都读
 ```
 
-就这样。LLM 会自己搜 arXiv、筛论文、读 PDF、写双语总结、生成 MDX 文件 — 全程自动。
+### OpenAI Codex CLI
 
-### 进阶：用外部 LLM API 做总结
+```bash
+# 方式 A：克隆项目（Codex 自动读取 AGENTS.md）
+git clone https://github.com/PixelCookie-zyf/paper-digest.git
+cd paper-digest
+codex "digest papers about RAG evaluation"
+
+# 方式 B：单次使用
+curl -O https://raw.githubusercontent.com/PixelCookie-zyf/paper-digest/main/.claude/commands/paper-digest.md
+codex -i paper-digest.md "digest papers about RAG evaluation"
+```
+
+### OpenCode
+
+```bash
+# 克隆项目（OpenCode 自动读取 AGENTS.md）
+git clone https://github.com/PixelCookie-zyf/paper-digest.git
+cd paper-digest
+opencode
+# 然后输入："digest papers about LLM agents"
+```
+
+### Cursor / Copilot / Windsurf / 其他
+
+克隆项目后，把技能文件复制到对应 AI 助手的规则目录：
+
+```bash
+git clone https://github.com/PixelCookie-zyf/paper-digest.git
+cd paper-digest
+```
+
+| AI 助手 | 复制到 |
+|--------|-------|
+| **Cursor** | `cp .claude/commands/paper-digest.md .cursor/rules/paper-digest.md` |
+| **GitHub Copilot** | `cp .claude/commands/paper-digest.md .github/copilot-instructions.md` |
+| **Windsurf** | `cp .claude/commands/paper-digest.md .windsurf/rules/paper-digest.md` |
+| **Gemini CLI** | `cp .claude/commands/paper-digest.md GEMINI.md` |
+| **任何 LLM** | 把 `.claude/commands/paper-digest.md` 作为 system prompt 使用 |
+
+### 进阶选项
 
 ```
 /paper-digest --summarizer api                  # 使用 .env 中的 LLM_API_KEY
@@ -93,14 +133,6 @@ curl -o ~/.claude/commands/paper-digest.md \
 |---------|---------|---------|
 | `claude`（默认） | LLM 自己写总结 | 什么都不需要 |
 | `api` | 调用外部 LLM API | `.env` 中配置 `LLM_API_KEY` |
-
-### 给其他 LLM / Agent 框架用
-
-`.claude/commands/paper-digest.md` 是一个**自包含的 prompt 文件** — 包含完整工作流、arXiv 查询语法、双语总结 JSON schema 和 MDX 模板。你可以：
-
-1. 作为 system prompt 喂给任何 LLM
-2. 改造成 LangChain、CrewAI 等 Agent 框架的流程
-3. 作为参考规范来构建你自己的工具
 
 ---
 
@@ -178,7 +210,8 @@ OUTPUT_DIR=output
 ├── mdx_writer/              # 逐篇生成双语 MDX
 ├── history.py               # 跨次运行的去重追踪
 ├── processed_papers.json    # 自动生成的阅读记录
-├── .claude/commands/        # 斜杠命令（skill）文件
+├── AGENTS.md                # Agent 指令文件（Codex、OpenCode 等自动读取）
+├── .claude/commands/        # 技能文件（Claude Code 斜杠命令）
 └── output/                  # 你的论文摘要在这里
 ```
 

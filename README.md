@@ -10,7 +10,7 @@
 
 ---
 
-> **Slash Command Ready** — Install as `/paper-digest` in [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or any LLM tool. Zero dependencies, works out of the box. [See installation →](#install-as-slash-command)
+> **Agent Skill** — Works with [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Codex](https://github.com/openai/codex), [OpenCode](https://opencode.ai), [Cursor](https://cursor.sh), [Copilot](https://github.com/features/copilot), and any AI coding agent. Zero dependencies, works out of the box. [See installation →](#install-as-agent-skill)
 
 ---
 
@@ -48,11 +48,13 @@ Run it again tomorrow — it picks up where you left off, never repeats.
 
 ---
 
-## Install as Slash Command
+## Install as Agent Skill
 
-**This is the recommended way to use Paper Digest.** No Python, no pip, no API key needed — the LLM does everything natively.
+**No Python, no pip, no API key needed** — the agent does everything natively.
 
-### Step 1: Install
+The skill file (`.claude/commands/paper-digest.md`) is a **self-contained prompt** — any agent that reads markdown instructions can use it.
+
+### Claude Code
 
 ```bash
 # Option A: Clone and use in this project
@@ -65,7 +67,7 @@ curl -o ~/.claude/commands/paper-digest.md \
   https://raw.githubusercontent.com/PixelCookie-zyf/paper-digest/main/.claude/commands/paper-digest.md
 ```
 
-### Step 2: Use
+Then use:
 
 ```
 /paper-digest                                   # Default: "LLM Agent"
@@ -75,9 +77,47 @@ curl -o ~/.claude/commands/paper-digest.md \
 /paper-digest --no-screen                       # Skip screening, read all
 ```
 
-That's it. The LLM will search arXiv, screen papers, read PDFs, write bilingual summaries, and generate MDX files — all by itself.
+### OpenAI Codex CLI
 
-### Advanced: Use an external LLM API for summarization
+```bash
+# Option A: Clone the repo (Codex reads AGENTS.md automatically)
+git clone https://github.com/PixelCookie-zyf/paper-digest.git
+cd paper-digest
+codex "digest papers about RAG evaluation"
+
+# Option B: Use as one-off instructions
+curl -O https://raw.githubusercontent.com/PixelCookie-zyf/paper-digest/main/.claude/commands/paper-digest.md
+codex -i paper-digest.md "digest papers about RAG evaluation"
+```
+
+### OpenCode
+
+```bash
+# Clone the repo (OpenCode reads AGENTS.md automatically)
+git clone https://github.com/PixelCookie-zyf/paper-digest.git
+cd paper-digest
+opencode
+# Then ask: "digest papers about LLM agents"
+```
+
+### Cursor / Copilot / Windsurf / Others
+
+Clone the repo, then copy the skill file to your agent's rules directory:
+
+```bash
+git clone https://github.com/PixelCookie-zyf/paper-digest.git
+cd paper-digest
+```
+
+| Agent | Copy to |
+|-------|---------|
+| **Cursor** | `cp .claude/commands/paper-digest.md .cursor/rules/paper-digest.md` |
+| **GitHub Copilot** | `cp .claude/commands/paper-digest.md .github/copilot-instructions.md` |
+| **Windsurf** | `cp .claude/commands/paper-digest.md .windsurf/rules/paper-digest.md` |
+| **Gemini CLI** | `cp .claude/commands/paper-digest.md GEMINI.md` |
+| **Any LLM** | Use `.claude/commands/paper-digest.md` as system prompt |
+
+### Advanced Options
 
 ```
 /paper-digest --summarizer api                  # Uses LLM_API_KEY from .env
@@ -93,14 +133,6 @@ That's it. The LLM will search arXiv, screen papers, read PDFs, write bilingual 
 |------------|-------------|----------|
 | `claude` (default) | The LLM writes summaries itself | Nothing |
 | `api` | Calls external LLM API | `LLM_API_KEY` in `.env` |
-
-### For other LLMs / Agent frameworks
-
-`.claude/commands/paper-digest.md` is a **self-contained prompt** — it includes the full workflow, arXiv query syntax, bilingual summary schema, and MDX template. You can:
-
-1. Feed it as a system prompt to any LLM
-2. Adapt it for LangChain, CrewAI, or other agent frameworks
-3. Use it as a reference spec to build your own tool
 
 ---
 
@@ -178,7 +210,8 @@ Includes frontmatter — drop it straight into your blog.
 ├── mdx_writer/              # Per-paper bilingual MDX generation
 ├── history.py               # Dedup tracking across runs
 ├── processed_papers.json    # Auto-generated reading history
-├── .claude/commands/        # Slash command (skill) file
+├── AGENTS.md                # Agent instructions (Codex, OpenCode, etc.)
+├── .claude/commands/        # Skill file (Claude Code slash command)
 └── output/                  # Your paper summaries live here
 ```
 
