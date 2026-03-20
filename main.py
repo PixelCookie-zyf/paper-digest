@@ -18,7 +18,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskPr
 from config import settings
 from paper_search import ArxivProvider
 from paper_fetch import fetch_paper_content
-from llm_summary import summarize_paper, screen_paper
+from llm_summary import summarize_paper, screen_paper, plan_search
 from mdx_writer import generate_single_mdx
 from history import mark_processed, get_processed_ids, show_history
 
@@ -50,7 +50,7 @@ def main():
     parser.add_argument("--no-screen", action="store_true",
                         help="Skip AI screening")
     parser.add_argument("--start-date", default=None,
-                        help=f"Search from date (default: {settings.search_start_date})")
+                        help="Search from date (default: LLM decides based on topic)")
     parser.add_argument("--pool-size", type=int, default=None,
                         help=f"Candidate pool size (default: {settings.search_pool_size})")
     parser.add_argument("--history", action="store_true",
@@ -88,10 +88,26 @@ def main():
     ))
     console.print()
 
-    # ── Step 1: Search ──
+    # ── Step 0: LLM plans search strategy ──
+    with console.status(f"  [cyan]{settings.llm_model} is planning search strategy...[/]", spinner="dots"):
+        t0 = time.time()
+        strategy = plan_search(query)
+        elapsed = time.time() - t0
+
+    search_queries = strategy["search_queries"]
+    # Use LLM-suggested start date if user didn't specify one
+    if not args.start_date and strategy.get("start_date"):
+        start_date = strategy["start_date"]
+
+    console.print(f"  [green]Search strategy ready[/] ({elapsed:.1f}s)")
+    console.print(f"  [dim]{strategy.get('description', '')}[/]")
+    console.print(f"  [dim]Queries: {len(search_queries)} | From: {start_date}[/]")
+    console.print()
+
+    # ── Step 1: Search arXiv ──
     with console.status("[bold green]Searching arXiv...[/]", spinner="dots"):
         provider = ArxivProvider()
-        candidates = provider.search(query, max_results=pool_size, start_date=start_date)
+        candidates = provider.search(search_queries, max_results=pool_size, start_date=start_date)
 
     if not candidates:
         console.print("[bold red]No papers found.[/] Try a different query or date range.")
@@ -137,7 +153,7 @@ def main():
         if not args.no_screen:
             with console.status("  [yellow]AI screening...[/]", spinner="dots"):
                 t0 = time.time()
-                worth, reason = screen_paper(paper)
+                worth, reason = screen_paper(paper, topic=query)
                 elapsed = time.time() - t0
 
             if not worth:

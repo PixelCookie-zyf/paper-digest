@@ -1,11 +1,44 @@
+# ── Search strategy prompt: LLM generates search terms for any topic ──
+
+SEARCH_STRATEGY_PROMPT = """You are a research advisor helping someone systematically read through a research field.
+
+Given a research topic/direction, generate arXiv search queries to find the most important papers, starting from the foundational ones.
+
+Topic: {topic}
+
+Think about:
+1. What are the key terms, synonyms, and related concepts for this topic?
+2. What are the foundational papers that started this field? What keywords would match them?
+3. When did this research direction start gaining traction? (Suggest a start date)
+
+Respond with ONLY a JSON object (no markdown fences):
+{{
+  "search_queries": [
+    "(abs:term1 AND abs:term2)",
+    "(abs:\\"exact phrase\\" AND abs:term3)",
+    "(abs:term4 OR abs:term5) AND abs:term6)"
+  ],
+  "start_date": "YYYY-MM-DD",
+  "description": "Brief description of what these queries cover and why"
+}}
+
+Rules for search_queries:
+- Generate 3-5 arXiv search queries using arXiv query syntax
+- Use abs: for abstract search, ti: for title search
+- Use AND, OR operators, quote exact phrases with \\"
+- Make queries broad enough to catch foundational papers, not just recent ones
+- First query should target the most canonical/classic papers in this field
+- Cover different angles and sub-topics of the field"""
+
+
 # ── Screening prompt: quick check if paper is worth reading ──
 
-SCREENING_PROMPT = """You are a research paper curator for a technical blog focused on LLM Agents.
+SCREENING_PROMPT = """You are a research paper curator for a technical blog focused on "{topic}".
 
-Given this paper's title and abstract, decide if it's **worth a detailed read** for someone following the LLM Agent field. Consider:
+Given this paper's title and abstract, decide if it's **worth a detailed read** for someone following this field. Consider:
 - Is it a foundational / influential paper in this area?
 - Does it introduce a novel method, framework, or benchmark?
-- Is it highly relevant to LLM-based agents (planning, tool use, memory, reasoning, multi-agent)?
+- Is it highly relevant to the topic "{topic}"?
 - Would it be interesting to a technical audience?
 
 Paper Title: {title}
@@ -79,13 +112,18 @@ Output ONLY the JSON object. No markdown fences, no extra text.
 }}"""
 
 
+def build_search_strategy_prompt(topic: str) -> str:
+    return SEARCH_STRATEGY_PROMPT.format(topic=topic)
+
+
 def build_screening_prompt(title: str, authors: list[str], published: str,
-                           abstract: str) -> str:
+                           abstract: str, topic: str = "AI research") -> str:
     return SCREENING_PROMPT.format(
         title=title,
         authors=", ".join(authors[:5]),
         published=published,
         abstract=abstract[:1000],
+        topic=topic,
     )
 
 

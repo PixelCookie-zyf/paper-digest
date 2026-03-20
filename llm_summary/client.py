@@ -4,7 +4,7 @@ import re
 from openai import OpenAI
 from config import settings
 from paper_search.base import PaperMeta
-from .prompts import build_summary_prompt, build_screening_prompt
+from .prompts import build_summary_prompt, build_screening_prompt, build_search_strategy_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +39,49 @@ def _extract_json(raw: str) -> dict:
     raise json.JSONDecodeError("No valid JSON found", raw, 0)
 
 
-def screen_paper(paper: PaperMeta) -> tuple[bool, str]:
-    """Quick screening: is this paper worth a detailed read?
+def plan_search(topic: str) -> dict:
+    """Ask LLM to generate search strategy for a research topic.
 
-    Returns (worth_reading: bool, reason: str)
+    Returns dict with search_queries (list[str]), start_date (str), description (str).
+    Falls back to simple keyword search on failure.
     """
+    logger.info(f"[Search Strategy] Planning search for: {topic}")
+
+    prompt = build_search_strategy_prompt(topic)
+
+    try:
+        client = _create_client()
+        response = client.chat.completions.create(
+            model=settings.llm_model,
+            messages=[
+                {"role": "system", "content": "You are a research advisor. Respond with JSON only."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.3,
+            max_tokens=512,
+        )
+        raw = response.choices[0].message.content.strip()
+        result = _extract_json(raw)
+        queries = result.get("search_queries", [])
+        start_date = result.get("start_date", "2020-01-01")
+        description = result.get("description", "")
+        if queries:
+            logger.info(f"[Search Strategy] Generated {len(queries)} queries, from {start_date}")
+            return result
+    except Exception as e:
+        logger.warning(f"[Search Strategy] LLM planning failed ({e}), using fallback")
+
+    # Fallback: simple keyword search
+    words = topic.strip().split()
+    if len(words) == 1:
+        queries = [f'(ti:"{topic}" OR abs:"{topic}")']
+    else:
+        queries = ["(" + " AND ".join(f'abs:{w}' for w in words) + ")"]
+    return {"search_queries": queries, "start_date": "2020-01-01", "description": f"Fallback search for {topic}"}
+
+
+def screen_paper(paper: PaperMeta, topic: str = "AI research") -> tuple[bool, str]:
+    """Quick screening: is this paper worth a detailed read?"""
     logger.info(f"[Screen] Evaluating: {paper.title}")
 
     prompt = build_screening_prompt(
@@ -51,6 +89,7 @@ def screen_paper(paper: PaperMeta) -> tuple[bool, str]:
         authors=paper.authors,
         published=paper.published,
         abstract=paper.abstract,
+        topic=topic,
     )
 
     try:
