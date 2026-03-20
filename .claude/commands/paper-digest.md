@@ -1,6 +1,6 @@
 ---
 description: "Search arXiv papers, AI-screen, summarize (bilingual), generate MDX"
-argument-hint: '[query] [--mode native|script] [--summarizer claude|minimax] [--max N] [--start-date YYYY-MM-DD] [--no-screen]'
+argument-hint: '[query] [--mode native|script] [--summarizer claude|api] [--max N] [--start-date YYYY-MM-DD] [--no-screen]'
 allowed-tools: Bash, Read, Write, Edit, WebFetch, Glob, Grep
 ---
 
@@ -16,7 +16,7 @@ Parse `$ARGUMENTS` for these options (all optional):
 |----------|---------|-------------|
 | `query` (positional) | `LLM Agent` | Search keyword |
 | `--mode` | `native` | `native` = you do everything; `script` = run Python pipeline |
-| `--summarizer` | `claude` | `claude` = you summarize; `minimax` = call MiniMax API |
+| `--summarizer` | `claude` | `claude` = you summarize; `api` = call external LLM API |
 | `--max` | `3` | Papers to process this run |
 | `--pool-size` | `20` | Candidate pool size |
 | `--start-date` | `2022-10-01` | Search from this date |
@@ -26,7 +26,7 @@ Examples:
 - `/paper-digest` → query="LLM Agent", native mode, claude summarizer, max 3
 - `/paper-digest "RAG evaluation" --max 5` → query="RAG evaluation", 5 papers
 - `/paper-digest --mode script` → use Python pipeline
-- `/paper-digest --summarizer minimax` → use MiniMax for summaries
+- `/paper-digest --summarizer api` → use external LLM API for summaries
 
 ---
 
@@ -38,7 +38,7 @@ If `--mode script`, delegate to the Python pipeline:
    ```
    uv venv .venv && source .venv/bin/activate && uv pip install -r requirements.txt
    ```
-2. Check that `MINIMAX_API_KEY` is set in `.env`. If not, warn the user.
+2. Check that `LLM_API_KEY` is set in `.env`. If not, warn the user.
 3. Run:
    ```
    source .venv/bin/activate && python3 main.py "<query>" -n <max> --pool-size <pool_size> --start-date <start_date> [--no-screen]
@@ -158,14 +158,14 @@ Generate a structured bilingual summary. The output must be a JSON object with A
 
 **If `--summarizer claude` (default):** You generate the summary yourself based on the paper content you just read. Be thorough, specific, and include real numbers/names. Write Chinese natively, not as translation.
 
-**If `--summarizer minimax`:** Read `MINIMAX_API_KEY` from `.env`, then call the API:
+**If `--summarizer api`:** Read `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL` from `.env`, then call the OpenAI-compatible API:
 ```bash
-source .env && curl -s https://api.minimaxi.com/v1/chat/completions \
-  -H "Authorization: Bearer $MINIMAX_API_KEY" \
+source .env && curl -s ${LLM_BASE_URL}/chat/completions \
+  -H "Authorization: Bearer $LLM_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '<JSON payload with model, messages, temperature=0.3, max_tokens=8192>'
+  -d '<JSON payload with model=$LLM_MODEL, messages, temperature=0.3, max_tokens=8192>'
 ```
-Use the model from `.env` (`MINIMAX_MODEL`, default `MiniMax-M2.7`). The prompt should contain the paper info + abstract + content + the JSON schema above.
+The prompt should contain the paper info + abstract + content + the JSON schema above. Works with any OpenAI-compatible endpoint (MiniMax, DeepSeek, Qwen, OpenAI, Ollama, etc.).
 
 ### Step 6: Generate MDX
 

@@ -71,8 +71,8 @@ def main():
     start_date = args.start_date or settings.search_start_date
     pool_size = args.pool_size or settings.search_pool_size
 
-    if not settings.minimax_api_key:
-        console.print("[bold red]MINIMAX_API_KEY is not set! Configure .env first.[/]")
+    if not settings.llm_api_key:
+        console.print("[bold red]LLM_API_KEY is not set! Configure .env first.[/]")
         sys.exit(1)
 
     # ── Header ──
@@ -80,6 +80,7 @@ def main():
     console.print(Panel(
         f"[bold]Query:[/] {query}\n"
         f"[bold]From:[/]  {start_date}\n"
+        f"[bold]Model:[/] {settings.llm_model}\n"
         f"[bold]Pool:[/]  {pool_size} candidates\n"
         f"[bold]Goal:[/]  {max_papers} papers",
         title="[bold cyan]Paper Digest[/]",
@@ -159,7 +160,7 @@ def main():
             console.print(f"  [yellow]No full text[/] — will use abstract only")
 
         # ── Summarize ──
-        with console.status("  [magenta]MiniMax is reading and writing summary...[/]", spinner="dots"):
+        with console.status(f"  [magenta]{settings.llm_model} is reading and writing summary...[/]", spinner="dots"):
             t0 = time.time()
             summary = summarize_paper(paper)
             elapsed = time.time() - t0

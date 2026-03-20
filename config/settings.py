@@ -7,15 +7,15 @@ load_dotenv()
 
 @dataclass
 class Settings:
-    # MiniMax API
-    minimax_api_key: str = ""
-    minimax_base_url: str = "https://api.minimaxi.com/v1"
-    minimax_model: str = "MiniMax-M2.7"
+    # LLM API (any OpenAI-compatible endpoint)
+    llm_api_key: str = ""
+    llm_base_url: str = "https://api.minimaxi.com/v1"
+    llm_model: str = "MiniMax-M2.7"
 
     # Output
     output_dir: str = "output"
 
-    # Search defaults (hardcoded, no need to configure)
+    # Search defaults (hardcoded)
     default_query: str = "LLM Agent"
     max_papers: int = 3
     search_pool_size: int = 20
@@ -23,9 +23,9 @@ class Settings:
     search_providers: list = field(default_factory=lambda: ["arxiv"])
 
     def __post_init__(self):
-        self.minimax_api_key = os.getenv("MINIMAX_API_KEY", self.minimax_api_key)
-        self.minimax_base_url = os.getenv("MINIMAX_BASE_URL", self.minimax_base_url)
-        self.minimax_model = os.getenv("MINIMAX_MODEL", self.minimax_model)
+        self.llm_api_key = os.getenv("LLM_API_KEY", self.llm_api_key)
+        self.llm_base_url = os.getenv("LLM_BASE_URL", self.llm_base_url)
+        self.llm_model = os.getenv("LLM_MODEL", self.llm_model)
         self.output_dir = os.getenv("OUTPUT_DIR", self.output_dir)
 
 

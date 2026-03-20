@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 def _create_client() -> OpenAI:
     return OpenAI(
-        api_key=settings.minimax_api_key,
-        base_url=settings.minimax_base_url,
+        api_key=settings.llm_api_key,
+        base_url=settings.llm_base_url,
     )
 
 
@@ -56,7 +56,7 @@ def screen_paper(paper: PaperMeta) -> tuple[bool, str]:
     try:
         client = _create_client()
         response = client.chat.completions.create(
-            model=settings.minimax_model,
+            model=settings.llm_model,
             messages=[
                 {"role": "system", "content": "You are a paper screening assistant. Respond with JSON only."},
                 {"role": "user", "content": prompt},
@@ -76,12 +76,9 @@ def screen_paper(paper: PaperMeta) -> tuple[bool, str]:
 
 
 def summarize_paper(paper: PaperMeta) -> dict:
-    """Call MiniMax API to generate a thorough bilingual summary for one paper.
-
-    Returns a dict with structured summary fields, or a fallback dict on failure.
-    """
-    logger.info(f"[MiniMax] Summarizing: {paper.title}")
-    logger.info(f"[MiniMax] Content length: {len(paper.full_text)} chars")
+    """Call LLM API to generate a thorough bilingual summary for one paper."""
+    logger.info(f"[LLM] Summarizing: {paper.title}")
+    logger.info(f"[LLM] Content length: {len(paper.full_text)} chars")
 
     prompt = build_summary_prompt(
         title=paper.title,
@@ -96,7 +93,7 @@ def summarize_paper(paper: PaperMeta) -> dict:
     try:
         client = _create_client()
         response = client.chat.completions.create(
-            model=settings.minimax_model,
+            model=settings.llm_model,
             messages=[
                 {
                     "role": "system",
@@ -110,20 +107,20 @@ def summarize_paper(paper: PaperMeta) -> dict:
 
         raw = response.choices[0].message.content.strip()
         summary = _extract_json(raw)
-        logger.info(f"[MiniMax] Summary generated successfully ({len(raw)} chars)")
+        logger.info(f"[LLM] Summary generated successfully ({len(raw)} chars)")
         return summary
 
     except json.JSONDecodeError as e:
-        logger.error(f"[MiniMax] Failed to parse JSON response: {e}")
+        logger.error(f"[LLM] Failed to parse JSON response: {e}")
         return _fallback_summary(paper)
     except Exception as e:
-        logger.error(f"[MiniMax] API call failed: {e}")
+        logger.error(f"[LLM] API call failed: {e}")
         return _fallback_summary(paper)
 
 
 def _fallback_summary(paper: PaperMeta) -> dict:
     """Generate a minimal fallback summary from paper metadata."""
-    logger.warning(f"[MiniMax] Using fallback summary for: {paper.title}")
+    logger.warning(f"[LLM] Using fallback summary for: {paper.title}")
     return {
         "title_zh": paper.title,
         "title_en": paper.title,

@@ -31,9 +31,9 @@ python main.py
 
 1. **搜索** — 从 ReAct 时代（2022-10）开始按时间顺序搜索 arXiv
 2. **去重** — 跳过你已经读过的论文
-3. **AI 筛选** — MiniMax 判断每篇论文：值不值得你花时间？
+3. **AI 筛选** — AI 判断每篇论文：值不值得你花时间？
 4. **深度阅读** — 下载完整 PDF，提取全文
-5. **总结** — 逐篇送给 MiniMax 生成详细的双语分析
+5. **总结** — 逐篇送给 LLM 生成详细的双语分析
 6. **生成** — 每篇论文一个 MDX 文件，结构清晰，可直接发博客
 
 明天再跑一次，自动接上次的进度，永远不重复。
@@ -41,8 +41,8 @@ python main.py
 ## 核心特点
 
 - **按时间线阅读** — 从 ReAct（2022-10）开始，按发表时间往后推进。先打基础，再看前沿，建立完整的知识脉络。
-- **AI 帮你筛** — 搜到一批候选论文后，先让 MiniMax 快速过一遍摘要，判断值不值得精读。水文直接跳过，省时间。
-- **一篇一篇精读** — 不是把一堆论文塞给 AI 批量总结。每篇论文单独下载完整 PDF，提取全文，独立送给 MiniMax 认真写总结。
+- **AI 帮你筛** — 搜到一批候选论文后，先让 AI 快速过一遍摘要，判断值不值得精读。水文直接跳过，省时间。
+- **一篇一篇精读** — 不是把一堆论文塞给 AI 批量总结。每篇论文单独下载完整 PDF，提取全文，独立送给 LLM 认真写总结。
 - **中英双语** — 每个部分都同时输出中文和英文。不是机翻，AI 分别用两种语言原生撰写。
 - **跑完接着跑** — 自动记录已处理的论文。今天跑 3 篇，明天跑 3 篇，一周就能系统过完一个方向的经典论文。不会重复。
 - **看得见进度** — 终端里有转圈动画和每步耗时，清楚知道工具在干嘛。
@@ -56,7 +56,7 @@ uv pip install -r requirements.txt
 
 # 配置
 cp .env.example .env
-# 编辑 .env，填入你的 MINIMAX_API_KEY
+# 编辑 .env，填入你的 LLM_API_KEY
 
 # 运行
 python main.py
@@ -95,7 +95,7 @@ cp .claude/commands/paper-digest.md ~/.claude/commands/
 /paper-digest                                   # 默认："LLM Agent"，Claude 自己总结
 /paper-digest "multimodal reasoning"            # 换个方向
 /paper-digest --max 5                           # 处理 5 篇
-/paper-digest --summarizer minimax              # 用 MiniMax API 而不是 Claude
+/paper-digest --summarizer api              # 用外部 LLM API 而不是 Claude
 /paper-digest --mode script                     # 用 Python 脚本跑
 /paper-digest --start-date 2024-01-01           # 从 2024 年开始
 /paper-digest --no-screen                       # 跳过质量筛选
@@ -106,14 +106,14 @@ cp .claude/commands/paper-digest.md ~/.claude/commands/
 | 模式 | 工作方式 | 需要什么 |
 |------|---------|---------|
 | `native`（默认） | LLM 自己干所有事 — 搜索、筛选、读 PDF、写总结、生成 MDX | 什么都不需要 |
-| `script` | 调用 Python 脚本（`main.py`） | Python 依赖 + `MINIMAX_API_KEY` |
+| `script` | 调用 Python 脚本（`main.py`） | Python 依赖 + `LLM_API_KEY` |
 
 ### 总结引擎
 
 | 选项 | 工作方式 | 需要什么 |
 |------|---------|---------|
 | `claude`（默认） | LLM 自己写总结 | 什么都不需要 |
-| `minimax` | 调用 MiniMax API 生成总结 | `.env` 中配置 `MINIMAX_API_KEY` |
+| `api` | 调用外部 LLM API 生成总结 | `.env` 中配置 `LLM_API_KEY` |
 
 ### 给其他 LLM / Agent 框架用
 
@@ -130,9 +130,9 @@ cp .claude/commands/paper-digest.md ~/.claude/commands/
 ## 配置 (.env)
 
 ```env
-MINIMAX_API_KEY=your_key_here           # 必填
-MINIMAX_BASE_URL=https://api.minimaxi.com/v1
-MINIMAX_MODEL=MiniMax-M2.7
+LLM_API_KEY=your_key_here           # 必填
+LLM_BASE_URL=https://api.minimaxi.com/v1    # 默认：MiniMax
+LLM_MODEL=MiniMax-M2.7
 OUTPUT_DIR=output
 ```
 
@@ -166,7 +166,7 @@ OUTPUT_DIR=output
 ├── config/                  # 从 .env 读取配置
 ├── paper_search/            # arXiv 搜索（可扩展其他源）
 ├── paper_fetch/             # PDF 下载 + 全文提取
-├── llm_summary/             # MiniMax 筛选 + 深度总结
+├── llm_summary/             # LLM 筛选 + 深度总结
 ├── mdx_writer/              # 逐篇生成双语 MDX
 ├── history.py               # 跨次运行的去重追踪
 ├── processed_papers.json    # 自动生成的阅读记录
@@ -192,7 +192,7 @@ OUTPUT_DIR=output
 
   PASS (3.2s) 经典 ReAct 框架
   PDF extracted (8.4s) 52,381 chars
-  MiniMax 正在精读并撰写总结...
+  LLM 正在精读并撰写总结...
   Summary done (45.2s)
   Saved: output/2026-03-19-react-synergizing-reasoning-and-acting.mdx
 
@@ -208,6 +208,6 @@ OUTPUT_DIR=output
 
 <div align="center">
 
-*Built with arXiv API, MiniMax AI, and a lot of coffee.*
+*Built with arXiv API, any LLM you like, and a lot of coffee.*
 
 </div>
