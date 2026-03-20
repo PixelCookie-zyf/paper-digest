@@ -10,6 +10,10 @@
 
 ---
 
+> **支持斜杠命令** — 在 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 或任何 LLM 工具中安装为 `/paper-digest`。零依赖，开箱即用。[查看安装方法 →](#安装为斜杠命令)
+
+---
+
 ## 为什么做这个
 
 读论文是个体力活。不管是 LLM Agent、多模态推理、RAG 还是代码生成，哪个方向都是论文堆积如山。你想系统地读一遍，但是：
@@ -23,19 +27,13 @@
 
 ## 工作流程
 
-```
-python main.py
-```
-
-就这一行。工具会自动：
-
 1. **规划** — LLM 根据方向生成搜索词，自动判断这个领域从什么时候开始
 2. **搜索** — 按时间顺序搜索 arXiv，从经典论文开始
-2. **去重** — 跳过你已经读过的论文
-3. **AI 筛选** — AI 判断每篇论文：值不值得你花时间？
-4. **深度阅读** — 下载完整 PDF，提取全文
-5. **总结** — 逐篇送给 LLM 生成详细的双语分析
-6. **生成** — 每篇论文一个 MDX 文件，结构清晰，可直接发博客
+3. **去重** — 跳过你已经读过的论文
+4. **AI 筛选** — AI 判断每篇论文：值不值得你花时间？
+5. **深度阅读** — 下载完整 PDF，提取全文
+6. **总结** — 逐篇送给 LLM 生成详细的双语分析
+7. **生成** — 每篇论文一个 MDX 文件，结构清晰，可直接发博客
 
 明天再跑一次，自动接上次的进度，永远不重复。
 
@@ -48,94 +46,103 @@ python main.py
 - **跑完接着跑** — 自动记录已处理的论文。今天跑 3 篇，明天跑 3 篇，一周就能系统过完一个方向的经典论文。不会重复。
 - **看得见进度** — 终端里有转圈动画和每步耗时，清楚知道工具在干嘛。
 
-## 快速开始
+---
+
+## 安装为斜杠命令
+
+**这是推荐的使用方式。** 不需要 Python，不需要 pip，不需要 API key — LLM 自己搞定一切。
+
+### 第一步：安装
 
 ```bash
-# 安装
-uv venv .venv && source .venv/bin/activate
-uv pip install -r requirements.txt
+# 方式 A：克隆项目，在项目内使用
+git clone https://github.com/PixelCookie-zyf/paper-digest.git
+cd paper-digest
 
-# 配置
-cp .env.example .env
-# 编辑 .env，填入你的 LLM_API_KEY
-
-# 运行
-python main.py
-```
-
-## 用法
-
-```bash
-python main.py                          # 默认："LLM Agent"
-python main.py "multimodal reasoning"   # 换个方向
-python main.py -n 5                     # 这次多读 5 篇
-python main.py --pool-size 50           # 搜索范围扩大
-python main.py --start-date 2024-01-01  # 从 2024 年开始
-python main.py --no-screen              # 跳过筛选，全都读
-python main.py --history                # 看看已经读过哪些
-```
-
-## 作为斜杠命令使用（适配 LLM 编程工具）
-
-Paper Digest 可以作为**斜杠命令**在 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 或任何支持 `.claude/commands/` 的 LLM 工具中运行。
-
-### 安装
-
-命令文件已经在项目的 `.claude/commands/paper-digest.md` 中。用 LLM 工具打开这个项目即可使用。
-
-如果想全局可用（任何项目都能调用），复制一下：
-
-```bash
+# 方式 B：全局安装（任何项目都能用）
 mkdir -p ~/.claude/commands
-cp .claude/commands/paper-digest.md ~/.claude/commands/
+curl -o ~/.claude/commands/paper-digest.md \
+  https://raw.githubusercontent.com/PixelCookie-zyf/paper-digest/main/.claude/commands/paper-digest.md
 ```
 
-### 命令用法
+### 第二步：使用
 
 ```
-/paper-digest                                   # 默认："LLM Agent"，Claude 自己总结
-/paper-digest "multimodal reasoning"            # 换个方向
-/paper-digest --max 5                           # 处理 5 篇
-/paper-digest --summarizer api              # 用外部 LLM API 而不是 Claude
-/paper-digest --mode script                     # 用 Python 脚本跑
-/paper-digest --start-date 2024-01-01           # 从 2024 年开始
-/paper-digest --no-screen                       # 跳过质量筛选
+/paper-digest                                   # 默认："LLM Agent"
+/paper-digest "multimodal reasoning"            # 任意研究方向
+/paper-digest "RAG evaluation" --max 5          # 读 5 篇
+/paper-digest --start-date 2024-01-01           # 从指定日期开始
+/paper-digest --no-screen                       # 跳过筛选，全都读
 ```
 
-### 运行模式
+就这样。LLM 会自己搜 arXiv、筛论文、读 PDF、写双语总结、生成 MDX 文件 — 全程自动。
+
+### 进阶：用外部 LLM API 做总结
+
+```
+/paper-digest --summarizer api                  # 使用 .env 中的 LLM_API_KEY
+/paper-digest --mode script                     # 改用 Python 脚本跑完整流程
+```
 
 | 模式 | 工作方式 | 需要什么 |
 |------|---------|---------|
-| `native`（默认） | LLM 自己干所有事 — 搜索、筛选、读 PDF、写总结、生成 MDX | 什么都不需要 |
-| `script` | 调用 Python 脚本（`main.py`） | Python 依赖 + `LLM_API_KEY` |
+| `native`（默认） | LLM 自己干所有事 | 什么都不需要 |
+| `script` | 调用 Python 脚本（`main.py`） | Python 依赖 + `.env` |
 
-### 总结引擎
-
-| 选项 | 工作方式 | 需要什么 |
-|------|---------|---------|
+| 总结引擎 | 工作方式 | 需要什么 |
+|---------|---------|---------|
 | `claude`（默认） | LLM 自己写总结 | 什么都不需要 |
-| `api` | 调用外部 LLM API 生成总结 | `.env` 中配置 `LLM_API_KEY` |
+| `api` | 调用外部 LLM API | `.env` 中配置 `LLM_API_KEY` |
 
 ### 给其他 LLM / Agent 框架用
 
-`.claude/commands/paper-digest.md` 是一个自包含的 prompt 文件，包含了完整的工作流、arXiv 查询构建方式、总结 JSON schema 和 MDX 模板。你可以：
+`.claude/commands/paper-digest.md` 是一个**自包含的 prompt 文件** — 包含完整工作流、arXiv 查询语法、双语总结 JSON schema 和 MDX 模板。你可以：
 
 1. 作为 system prompt 喂给任何 LLM
-2. 改造成其他 Agent 框架的流程（LangChain、CrewAI 等）
-3. 作为参考规范来构建你自己的论文阅读工具
-
-文件里包含了 LLM 需要知道的一切 — 不需要额外文档。
+2. 改造成 LangChain、CrewAI 等 Agent 框架的流程
+3. 作为参考规范来构建你自己的工具
 
 ---
 
-## 配置 (.env)
+## 替代方式：用 Python 脚本运行
+
+如果你更喜欢 Python 脚本（支持任何 OpenAI 兼容的 LLM API）：
+
+### 安装
+
+```bash
+git clone https://github.com/PixelCookie-zyf/paper-digest.git
+cd paper-digest
+uv venv .venv && source .venv/bin/activate
+uv pip install -r requirements.txt
+
+cp .env.example .env
+# 编辑 .env，填入你的 LLM_API_KEY
+```
+
+### 用法
+
+```bash
+python main.py                          # 默认："LLM Agent"
+python main.py "multimodal reasoning"   # 任意方向
+python main.py -n 5                     # 读 5 篇
+python main.py --pool-size 50           # 搜索范围扩大
+python main.py --start-date 2024-01-01  # 从指定日期开始
+python main.py --no-screen              # 跳过筛选
+python main.py --history                # 看看已经读过哪些
+```
+
+### 配置 (.env)
 
 ```env
-LLM_API_KEY=your_key_here           # 必填
+# 支持：MiniMax、OpenAI、DeepSeek、Qwen、Ollama 等
+LLM_API_KEY=your_api_key_here
 LLM_BASE_URL=https://api.minimaxi.com/v1    # 默认：MiniMax
 LLM_MODEL=MiniMax-M2.7
 OUTPUT_DIR=output
 ```
+
+---
 
 ## 生成的 MDX 长什么样
 
@@ -171,6 +178,7 @@ OUTPUT_DIR=output
 ├── mdx_writer/              # 逐篇生成双语 MDX
 ├── history.py               # 跨次运行的去重追踪
 ├── processed_papers.json    # 自动生成的阅读记录
+├── .claude/commands/        # 斜杠命令（skill）文件
 └── output/                  # 你的论文摘要在这里
 ```
 
