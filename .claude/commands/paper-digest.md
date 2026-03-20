@@ -19,7 +19,7 @@ Parse `$ARGUMENTS` for these options (all optional):
 | `--summarizer` | `claude` | `claude` = you summarize; `api` = call external LLM API |
 | `--max` | `3` | Papers to process this run |
 | `--pool-size` | `20` | Candidate pool size |
-| `--start-date` | `2022-10-01` | Search from this date |
+| `--start-date` | (auto) | Search from this date (default: you decide based on topic) |
 | `--no-screen` | false | Skip screening, process all |
 
 Examples:
@@ -53,20 +53,26 @@ If `--mode script`, delegate to the Python pipeline:
 
 You do everything yourself using your tools. Follow these steps in order.
 
-### Step 1: Search arXiv
+### Step 0: Plan Search Strategy
 
-Use Bash to query the arXiv API. Build the query as follows:
+Before searching, think about the topic and generate a search strategy:
+
+1. **What are the key terms, synonyms, and related concepts?** For example, "RAG evaluation" should also match "retrieval-augmented generation", "faithfulness", "RAGAS", etc.
+2. **When did this field start?** Suggest a start date so we begin from foundational papers.
+3. **Generate 3-5 arXiv search queries** using arXiv syntax (`abs:`, `ti:`, `AND`, `OR`, quoted phrases).
+
+The first query should target the most canonical/classic papers. Cover different sub-topics.
+
+If the user specified `--start-date`, use that instead of your suggestion.
+
+### Step 1: Search arXiv
 
 **CS categories:** `cs.AI`, `cs.CL`, `cs.LG`, `cs.MA`, `cs.SE`
 
-**Query construction for "LLM Agent":**
+Combine your search queries with the category filter:
 ```
-(cat:cs.AI OR cat:cs.CL OR cat:cs.LG OR cat:cs.MA OR cat:cs.SE) AND ((abs:LLM AND abs:agent) OR (abs:"large language model" AND abs:agent) OR (abs:"language model" AND abs:reasoning AND abs:acting) OR (abs:"language model" AND abs:"tool use") OR (abs:"language model" AND abs:planning AND abs:agent))
+(cat:cs.AI OR cat:cs.CL OR cat:cs.LG OR cat:cs.MA OR cat:cs.SE) AND (<your_query_1> OR <your_query_2> OR ...)
 ```
-
-**Query construction for other topics:**
-- Single word: `(cat:cs.AI OR ...) AND (ti:"<query>" OR abs:"<query>")`
-- Multi word: `(cat:cs.AI OR ...) AND (abs:<word1> AND abs:<word2> AND ...)`
 
 **API call** (use Bash with Python for reliable XML parsing):
 ```python
