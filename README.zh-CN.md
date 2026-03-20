@@ -12,7 +12,7 @@
 
 ## 为什么做这个
 
-读论文是个体力活。尤其是 LLM Agent 这个方向，从 2022 年 ReAct 开始爆发，几年下来论文已经成百上千。你想系统地读一遍，但是：
+读论文是个体力活。不管是 LLM Agent、多模态推理、RAG 还是代码生成，哪个方向都是论文堆积如山。你想系统地读一遍，但是：
 
 - 不知道从哪篇开始
 - 不知道哪些值得读、哪些是水文
@@ -29,7 +29,8 @@ python main.py
 
 就这一行。工具会自动：
 
-1. **搜索** — 从 ReAct 时代（2022-10）开始按时间顺序搜索 arXiv
+1. **规划** — LLM 根据方向生成搜索词，自动判断这个领域从什么时候开始
+2. **搜索** — 按时间顺序搜索 arXiv，从经典论文开始
 2. **去重** — 跳过你已经读过的论文
 3. **AI 筛选** — AI 判断每篇论文：值不值得你花时间？
 4. **深度阅读** — 下载完整 PDF，提取全文
@@ -40,7 +41,7 @@ python main.py
 
 ## 核心特点
 
-- **按时间线阅读** — 从 ReAct（2022-10）开始，按发表时间往后推进。先打基础，再看前沿，建立完整的知识脉络。
+- **按时间线阅读** — LLM 自动判断这个方向从什么时候开始，从经典论文往后推进。先打基础，再看前沿，建立完整的知识脉络。
 - **AI 帮你筛** — 搜到一批候选论文后，先让 AI 快速过一遍摘要，判断值不值得精读。水文直接跳过，省时间。
 - **一篇一篇精读** — 不是把一堆论文塞给 AI 批量总结。每篇论文单独下载完整 PDF，提取全文，独立送给 LLM 认真写总结。
 - **中英双语** — 每个部分都同时输出中文和英文。不是机翻，AI 分别用两种语言原生撰写。
@@ -65,7 +66,7 @@ python main.py
 ## 用法
 
 ```bash
-python main.py                          # 默认：从 2022-10 开始读 "LLM Agent"
+python main.py                          # 默认："LLM Agent"
 python main.py "multimodal reasoning"   # 换个方向
 python main.py -n 5                     # 这次多读 5 篇
 python main.py --pool-size 50           # 搜索范围扩大
@@ -177,30 +178,35 @@ OUTPUT_DIR=output
 
 ```
 ╭──────── Paper Digest ────────╮
-│ Query: LLM Agent             │
-│ From:  2022-10-01            │
+│ Query: RAG evaluation        │
+│ Model: deepseek-chat         │
 │ Pool:  20 candidates         │
 │ Goal:  3 papers              │
 ╰──────────────────────────────╯
 
-  Found 20 candidates from arXiv
-  All 20 are new
+  LLM 正在规划搜索策略... (2.1s)
+  覆盖检索增强生成、忠实性评估、RAGAS 基准测试...
+  搜索词: 4 条 | 从: 2020-05-01
 
-──────────── Paper 1/20 ────────────
-  ReAct: Synergizing Reasoning and Acting in Language Models
-  2022-10-06 · Shunyu Yao, Jeffrey Zhao, Dian Yu...
+  搜索 arXiv...
+  找到 18 篇候选论文
+  全部 18 篇都是新的
 
-  PASS (3.2s) 经典 ReAct 框架
-  PDF extracted (8.4s) 52,381 chars
-  LLM 正在精读并撰写总结...
-  Summary done (45.2s)
-  Saved: output/2026-03-19-react-synergizing-reasoning-and-acting.mdx
+──────────── Paper 1/18 ────────────
+  Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks
+  2020-05-22 · Patrick Lewis, Ethan Perez...
+
+  PASS (2.8s) RAG 奠基论文
+  PDF extracted (6.2s) 41,208 chars
+  deepseek-chat 正在精读并撰写总结...
+  Summary done (38.5s)
+  Saved: output/2026-03-20-retrieval-augmented-generation-for-knowledge.mdx
 
 ┌──── Done — 处理了 3 篇论文 ────┐
 │ #  File                         │
-│ 1  output/2026-03-19-react-…    │
-│ 2  output/2026-03-19-toolfo-…   │
-│ 3  output/2026-03-19-llm-pl-…   │
+│ 1  output/2026-03-20-retrieval… │
+│ 2  output/2026-03-20-self-rag…  │
+│ 3  output/2026-03-20-ragas-au…  │
 └─────────────────────────────────┘
 ```
 

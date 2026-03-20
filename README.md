@@ -12,7 +12,7 @@
 
 ## Why This Tool
 
-Reading papers is hard work. Especially in the LLM Agent space — since ReAct dropped in October 2022, hundreds of papers have piled up. You want to systematically read through them, but:
+Reading papers is hard work. Any research field — LLM agents, multimodal reasoning, RAG, code generation — has hundreds of papers piling up. You want to systematically read through them, but:
 
 - Don't know where to start
 - Can't tell which ones are worth reading vs. noise
@@ -29,7 +29,8 @@ python main.py
 
 That's it. The tool will:
 
-1. **Search** — Query arXiv from the ReAct era (2022-10) onward, oldest first
+1. **Plan** — LLM generates search queries and determines when the field started
+2. **Search** — Query arXiv chronologically, oldest first
 2. **Deduplicate** — Skip papers you've already read
 3. **AI Screen** — AI judges each paper: worth your time?
 4. **Deep Read** — Download full PDF, extract complete text
@@ -40,7 +41,7 @@ Run it again tomorrow — it picks up where you left off, never repeats.
 
 ## What Makes This Different
 
-- **Chronological reading path** — Starts from foundational papers (ReAct, Toolformer...) and progresses forward. You build understanding in order, not randomly.
+- **Chronological reading path** — LLM figures out when the field started, then progresses forward from foundational papers. You build understanding in order, not randomly.
 - **AI as your reading filter** — AI screens candidates before committing to a full read. Skips the noise, keeps the signal.
 - **One paper, full attention** — No batch summarization. Each paper gets the complete PDF fed to the LLM individually for a thorough, specific summary.
 - **Bilingual output** — Every section in both Chinese and English. Not machine-translated — the AI writes each language natively.
@@ -65,7 +66,7 @@ python main.py
 ## Usage
 
 ```bash
-python main.py                          # Default: "LLM Agent" from 2022-10
+python main.py                          # Default: "LLM Agent"
 python main.py "multimodal reasoning"   # Custom topic
 python main.py -n 5                     # Read 5 papers this run
 python main.py --pool-size 50           # Search deeper
@@ -177,30 +178,35 @@ Includes frontmatter — drop it straight into your blog.
 
 ```
 ╭──────── Paper Digest ────────╮
-│ Query: LLM Agent             │
-│ From:  2022-10-01            │
+│ Query: RAG evaluation        │
+│ Model: deepseek-chat         │
 │ Pool:  20 candidates         │
 │ Goal:  3 papers              │
 ╰──────────────────────────────╯
 
-  Found 20 candidates from arXiv
-  All 20 are new
+  LLM is planning search strategy... (2.1s)
+  Covers retrieval-augmented generation, faithfulness, RAGAS benchmark...
+  Queries: 4 | From: 2020-05-01
 
-──────────── Paper 1/20 ────────────
-  ReAct: Synergizing Reasoning and Acting in Language Models
-  2022-10-06 · Shunyu Yao, Jeffrey Zhao, Dian Yu...
+  Searching arXiv...
+  Found 18 candidates
+  All 18 are new
 
-  PASS (3.2s) Foundational ReAct framework for LLM agents
-  PDF extracted (8.4s) 52,381 chars
-  LLM is reading and writing summary...
-  Summary done (45.2s)
-  Saved: output/2026-03-19-react-synergizing-reasoning-and-acting.mdx
+──────────── Paper 1/18 ────────────
+  Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks
+  2020-05-22 · Patrick Lewis, Ethan Perez...
+
+  PASS (2.8s) Foundational RAG paper
+  PDF extracted (6.2s) 41,208 chars
+  deepseek-chat is reading and writing summary...
+  Summary done (38.5s)
+  Saved: output/2026-03-20-retrieval-augmented-generation-for-knowledge.mdx
 
 ┌──── Done — 3 paper(s) processed ────┐
 │ #  File                              │
-│ 1  output/2026-03-19-react-….mdx     │
-│ 2  output/2026-03-19-toolfo-….mdx    │
-│ 3  output/2026-03-19-llm-pl-….mdx    │
+│ 1  output/2026-03-20-retrieval-….mdx │
+│ 2  output/2026-03-20-self-rag-….mdx  │
+│ 3  output/2026-03-20-ragas-aut-….mdx │
 └──────────────────────────────────────┘
 ```
 
